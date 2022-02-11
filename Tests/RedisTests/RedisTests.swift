@@ -13,7 +13,7 @@ class RedisTests: XCTestCase {
             port: 6379
         )
 
-        let info = try app.redis.send(command: "INFO").wait()
+        let info = try app.redis.send(command: "INFO", with: []).wait()
         XCTAssertContains(info.string, "redis_version")
     }
 
@@ -27,7 +27,7 @@ class RedisTests: XCTestCase {
         )
 
         app.get("test") { req in
-            req.redis.send(command: "INFO").map {
+            req.redis.send(command: "INFO", with: []).map {
                 $0.description
             }
         }

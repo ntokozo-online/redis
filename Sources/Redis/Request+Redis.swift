@@ -1,4 +1,5 @@
 import Vapor
+import RediStack
 
 extension Request {
     public var redis: Redis {
@@ -11,6 +12,8 @@ extension Request {
 }
 
 extension Request.Redis: RedisClient {
+
+    
     public var eventLoop: EventLoop {
         self.request.eventLoop
     }
@@ -20,12 +23,17 @@ extension Request.Redis: RedisClient {
             .pool(for: self.eventLoop)
             .logging(to: logger)
     }
-
-    public func send(command: String, with arguments: [RESPValue]) -> EventLoopFuture<RESPValue> {
+    
+    public func send<RESPValue>(_ command: RedisCommand<RESPValue>) -> EventLoopFuture<RESPValue> {
         self.request.application.redis
             .pool(for: self.eventLoop)
             .logging(to: self.request.logger)
-            .send(command: command, with: arguments)
+            .send(command)
+    }
+
+    public func send(command: String, with arguments: [RESPValue]) -> EventLoopFuture<RESPValue> {
+        let redisCommand: RedisCommand<RESPValue> = RedisCommand(keyword: command, arguments: arguments)
+        return send(redisCommand)
     }
     
     public func subscribe(
